@@ -9,6 +9,7 @@ import sys, os
 import numpy as numpy
 import midi
 
+RANGE = 128
 
 def list_instruments(midi):
     partStream = midi.parts.stream()
