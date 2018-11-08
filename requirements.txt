@@ -1,0 +1,5 @@
+numpy==1.15.3
+midi==0.2.3
+msgpack==0.5.6
+tqdm==2.28.1
+tensorflow==0.12.0
