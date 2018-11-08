@@ -9,26 +9,26 @@ span = upperBound-lowerBound
 def midiToNoteStateMatrix(midifile, squash=True, span=span):
     pattern = midi.read_midifile(midifile)
 
-    timeleft = [track[0].tick for track in pattern]
+    timeLeft = [track[0].tick for track in pattern]
 
     posns = [0 for track in pattern]
 
-    statematrix = []
+    stateMatrix = []
     time = 0
 
-    state = [[0,0] for x in range(span)]
-    statematrix.append(state)
+    oneHotState = [[0,0] for x in range(span)]
+    stateMatrix.append(oneHotState)
     condition = True
     while condition:
         if time % (pattern.resolution / 4) == (pattern.resolution / 8):
             # Crossed a note boundary. Create a new state, defaulting to holding notes
-            oldstate = state
-            state = [[oldstate[x][0],0] for x in range(span)]
-            statematrix.append(state)
-        for i in range(len(timeleft)): #For each track
+            oldOneHotState = oneHotState
+            oneHotState = [[oldOneHotState[x][0],0] for x in range(span)]
+            stateMatrix.append(oneHotState)
+        for i in range(len(timeLeft)): #For each track
             if not condition:
                 break
-            while timeleft[i] == 0:
+            while timeLeft[i] == 0:
                 track = pattern[i]
                 pos = posns[i]
 
@@ -39,40 +39,39 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
                         # print "Note {} at time {} out of bounds (ignoring)".format(evt.pitch, time)
                     else:
                         if isinstance(evt, midi.NoteOffEvent) or evt.velocity == 0:
-                            state[evt.pitch-lowerBound] = [0, 0]
+                            oneHotState[evt.pitch-lowerBound] = [0, 0]
                         else:
-                            state[evt.pitch-lowerBound] = [1, 1]
+                            oneHotState[evt.pitch-lowerBound] = [1, 1]
                 elif isinstance(evt, midi.TimeSignatureEvent):
                     if evt.numerator not in (2, 4):
-                        # We don't want to worry about non-4 time signatures. Bail early!
-                        # print "Found time signature event {}. Bailing!".format(evt)
-                        out =  statematrix
+                        # ignore measures that are not 4x4 time...
+                        out =  stateMatrix
                         condition = False
                         break
                 try:
-                    timeleft[i] = track[pos + 1].tick
+                    timeLeft[i] = track[pos + 1].tick
                     posns[i] += 1
                 except IndexError:
-                    timeleft[i] = None
+                    timeLeft[i] = None
 
-            if timeleft[i] is not None:
-                timeleft[i] -= 1
+            if timeLeft[i] is not None:
+                timeLeft[i] -= 1
 
-        if all(t is None for t in timeleft):
+        if all(t is None for t in timeLeft):
             break
 
         time += 1
 
-    S = np.array(statematrix)
-    statematrix = np.hstack((S[:, :, 0], S[:, :, 1]))
-    statematrix = np.asarray(statematrix).tolist()
-    return statematrix
+    S = np.array(stateMatrix)
+    stateMatrix = np.hstack((S[:, :, 0], S[:, :, 1]))
+    stateMatrix = np.asarray(stateMatrix).tolist()
+    return stateMatrix
 
-def noteStateMatrixToMidi(statematrix, name="example", span=span):
-    statematrix = np.array(statematrix)
-    if not len(statematrix.shape) == 3:
-        statematrix = np.dstack((statematrix[:, :span], statematrix[:, span:]))
-    statematrix = np.asarray(statematrix)
+def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
+    stateMatrix = np.array(stateMatrix)
+    if not len(stateMatrix.shape) == 3:
+        stateMatrix = np.dstack((stateMatrix[:, :span], stateMatrix[:, span:]))
+    stateMatrix = np.asarray(stateMatrix)
     pattern = midi.Pattern()
     track = midi.Track()
     pattern.append(track)
@@ -80,14 +79,14 @@ def noteStateMatrixToMidi(statematrix, name="example", span=span):
     span = upperBound-lowerBound
     tickscale = 55
     
-    lastcmdtime = 0
-    prevstate = [[0,0] for x in range(span)]
-    for time, state in enumerate(statematrix + [prevstate[:]]):  
+    lastNoteTime = 0
+    prevOneHotState = [[0,0] for x in range(span)]
+    for time, oneHotState in enumerate(stateMatrix + [prevOneHotState[:]]):  
         offNotes = []
         onNotes = []
         for i in range(span):
-            n = state[i]
-            p = prevstate[i]
+            n = oneHotState[i]
+            p = prevOneHotState[i]
             if p[0] == 1:
                 if n[0] == 0:
                     offNotes.append(i)
@@ -97,13 +96,13 @@ def noteStateMatrixToMidi(statematrix, name="example", span=span):
             elif n[0] == 1:
                 onNotes.append(i)
         for note in offNotes:
-            track.append(midi.NoteOffEvent(tick=(time-lastcmdtime)*tickscale, pitch=note+lowerBound))
-            lastcmdtime = time
+            track.append(midi.NoteOffEvent(tick=(time-lastNoteTime)*tickscale, pitch=note+lowerBound))
+            lastNoteTime = time
         for note in onNotes:
-            track.append(midi.NoteOnEvent(tick=(time-lastcmdtime)*tickscale, velocity=40, pitch=note+lowerBound))
-            lastcmdtime = time
+            track.append(midi.NoteOnEvent(tick=(time-lastNoteTime)*tickscale, velocity=40, pitch=note+lowerBound))
+            lastNoteTime = time
             
-        prevstate = state
+        prevOneHotState = oneHotState
     
     eot = midi.EndOfTrackEvent(tick=1)
     track.append(eot)
