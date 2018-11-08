@@ -1,8 +1,8 @@
 import midi
 import numpy as np
 
-lowerBound = 24
-upperBound = 102
+lowerBound = 0
+upperBound = 127
 span = upperBound-lowerBound
 
 
@@ -112,3 +112,11 @@ def noteStateMatrixToMidi(statematrix, name="example", span=span):
         midi.write_midifile("{}.mid".format(name), pattern)
     else:
         midi.write_midifile(name, pattern)
+
+matrix = midiToNoteStateMatrix('./MusicFiles/Unravel.mid')
+
+print(matrix)
+
+noteStateMatrixToMidi(matrix)
+
+# Example file, velocity was lost and also tempo seemed to be a bit slower, but the notes and rhthym was great so thats amazing
