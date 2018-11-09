@@ -81,7 +81,9 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
     pattern.append(track)
     
     span = upperBound-lowerBound
-    tickscale = 42
+    # For unravel is 47-48
+    # lower is faster, higher is slower... i know it's reversed
+    tempo = 47
     
     lastNoteTime = 0
     prevOneHotState = [[0,0] for x in range(span)]
@@ -100,21 +102,18 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
             elif n[0] == 1:
                 onNotes.append(i)
         for note in offNotes:
-            track.append(midi.NoteOffEvent(tick=(time-lastNoteTime)*tickscale, pitch=note))
+            track.append(midi.NoteOffEvent(tick=(time-lastNoteTime)*tempo, pitch=note))
             lastNoteTime = time
         for note in onNotes:
-            track.append(midi.NoteOnEvent(tick=(time-lastNoteTime)*tickscale, velocity=40, pitch=note))
+            track.append(midi.NoteOnEvent(tick=(time-lastNoteTime)*tempo, velocity=80, pitch=note))
             lastNoteTime = time
             
         prevOneHotState = oneHotState
     
-    eot = midi.EndOfTrackEvent(tick=1)
-    track.append(eot)
+    endOfTrack = midi.EndOfTrackEvent(tick=1)
+    track.append(endOfTrack)
 
-    if(not ".mid" in name):
-        midi.write_midifile("{}.mid".format(name), pattern)
-    else:
-        midi.write_midifile(name, pattern)
+    midi.write_midifile(name, pattern)
 
 matrix = midiToNoteStateMatrix('./MusicFiles/Unravel.mid')
 noteStateMatrixToMidi(matrix)
