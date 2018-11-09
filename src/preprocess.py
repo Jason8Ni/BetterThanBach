@@ -6,21 +6,29 @@ upperBound = 127
 span = upperBound-lowerBound
 
 
-def midiToNoteStateMatrix(midifile, squash=True, span=span):
+def midiToNoteStateMatrix(midifile, squash=True, span=span, verbose = True):
     pattern = midi.read_midifile(midifile)
 
     timeLeft = [track[0].tick for track in pattern]
-
-    posns = [0 for track in pattern]
-
+    if verbose:
+        print('Time: ', timeLeft)
+    positions = [0 for track in pattern]
+    if verbose: 
+        print('Positions: ',  positions)
     stateMatrix = []
     time = 0
 
     oneHotState = [[0,0] for x in range(span)]
+    if verbose:
+        print('One Hot Encoding: ', oneHotState)
+        print('Pattern Resolution: ', pattern.resolution)
     stateMatrix.append(oneHotState)
     condition = True
     while condition:
-        if time % (pattern.resolution / 4) == (pattern.resolution / 8):
+        if time % (pattern.resolution / 4) == (pattern.resolution / 8): 
+            # only look at 4 or 8 time 
+            if verbose:
+                print('Time Step', time)
             # Crossed a note boundary. Create a new state, defaulting to holding notes
             oldOneHotState = oneHotState
             oneHotState = [[oldOneHotState[x][0],0] for x in range(span)]
@@ -30,27 +38,28 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span):
                 break
             while timeLeft[i] == 0:
                 track = pattern[i]
-                pos = posns[i]
+                position = positions[i]              
 
-                evt = track[pos]
-                if isinstance(evt, midi.NoteEvent):
-                    if (evt.pitch < lowerBound) or (evt.pitch >= upperBound):
+                event = track[position]
+                if isinstance(event, midi.NoteEvent):
+                    if (event.pitch < lowerBound) or (event.pitch >= upperBound):
                         pass
-                        # print "Note {} at time {} out of bounds (ignoring)".format(evt.pitch, time)
+                        if verbose:
+                            print Note {} at time {} out of bounds (ignoring)".format(event.pitch, time)
                     else:
-                        if isinstance(evt, midi.NoteOffEvent) or evt.velocity == 0:
-                            oneHotState[evt.pitch-lowerBound] = [0, 0]
+                        if isinstance(event, midi.NoteOffEvent) or event.velocity == 0:
+                            oneHotState[event.pitch-lowerBound] = [0, 0]
                         else:
-                            oneHotState[evt.pitch-lowerBound] = [1, 1]
-                elif isinstance(evt, midi.TimeSignatureEvent):
-                    if evt.numerator not in (2, 4):
+                            oneHotState[event.pitch-lowerBound] = [1, 1]
+                elif isinstance(event, midi.TimeSignatureEvent):
+                    if event.numerator not in (2, 4):
                         # ignore measures that are not 4x4 time...
                         out =  stateMatrix
                         condition = False
                         break
                 try:
-                    timeLeft[i] = track[pos + 1].tick
-                    posns[i] += 1
+                    timeLeft[i] = track[position + 1].tick
+                    positions[i] += 1
                 except IndexError:
                     timeLeft[i] = None
 
@@ -114,8 +123,6 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
 
 matrix = midiToNoteStateMatrix('./MusicFiles/Unravel.mid')
 
-print(matrix)
-
-noteStateMatrixToMidi(matrix)
+#noteStateMatrixToMidi(matrix)
 
 # Example file, velocity was lost and also tempo seemed to be a bit slower, but the notes and rhthym was great so thats amazing

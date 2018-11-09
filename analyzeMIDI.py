@@ -5,6 +5,6 @@ import midi
 def printMIDI(filename):
 
     mid = midi.read_midifile(filename)
-    print(mid)
+    print(mid[0])
 
 printMIDI('./MusicFiles/Unravel.mid')
