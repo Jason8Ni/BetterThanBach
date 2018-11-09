@@ -42,15 +42,10 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span, verbose = True):
 
                 event = track[position]
                 if isinstance(event, midi.NoteEvent):
-                    if (event.pitch < lowerBound) or (event.pitch >= upperBound):
-                        pass
-                        if verbose:
-                            print Note {} at time {} out of bounds (ignoring)".format(event.pitch, time)
+                    if isinstance(event, midi.NoteOffEvent) or event.velocity == 0:
+                        oneHotState[event.pitch] = [0, 0]
                     else:
-                        if isinstance(event, midi.NoteOffEvent) or event.velocity == 0:
-                            oneHotState[event.pitch-lowerBound] = [0, 0]
-                        else:
-                            oneHotState[event.pitch-lowerBound] = [1, 1]
+                        oneHotState[event.pitch] = [1, 1]
                 elif isinstance(event, midi.TimeSignatureEvent):
                     if event.numerator not in (2, 4):
                         # ignore measures that are not 4x4 time...
@@ -66,7 +61,7 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span, verbose = True):
             if timeLeft[i] is not None:
                 timeLeft[i] -= 1
 
-        if all(t is None for t in timeLeft):
+        if all(time is None for time in timeLeft):
             break
 
         time += 1
@@ -86,7 +81,7 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
     pattern.append(track)
     
     span = upperBound-lowerBound
-    tickscale = 55
+    tickscale = 42
     
     lastNoteTime = 0
     prevOneHotState = [[0,0] for x in range(span)]
@@ -105,10 +100,10 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
             elif n[0] == 1:
                 onNotes.append(i)
         for note in offNotes:
-            track.append(midi.NoteOffEvent(tick=(time-lastNoteTime)*tickscale, pitch=note+lowerBound))
+            track.append(midi.NoteOffEvent(tick=(time-lastNoteTime)*tickscale, pitch=note))
             lastNoteTime = time
         for note in onNotes:
-            track.append(midi.NoteOnEvent(tick=(time-lastNoteTime)*tickscale, velocity=40, pitch=note+lowerBound))
+            track.append(midi.NoteOnEvent(tick=(time-lastNoteTime)*tickscale, velocity=40, pitch=note))
             lastNoteTime = time
             
         prevOneHotState = oneHotState
@@ -122,7 +117,6 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
         midi.write_midifile(name, pattern)
 
 matrix = midiToNoteStateMatrix('./MusicFiles/Unravel.mid')
-
-#noteStateMatrixToMidi(matrix)
+noteStateMatrixToMidi(matrix)
 
 # Example file, velocity was lost and also tempo seemed to be a bit slower, but the notes and rhthym was great so thats amazing
