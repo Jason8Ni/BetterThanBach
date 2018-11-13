@@ -14,5 +14,15 @@ def menu(songs):
     numHidden = 64
 
     numEpochs = 1000
-    batchSize = 100
-    learningRate = tf.constant(0.0025, tf.float32)  
+    batchSize = 128
+    learningRate = tf.constant(0.0025, tf.float32)
+    trainingSteps = 10000
+    displayStep = 200
+
+    weights = {
+        'out': tf.Variable(tf.random_normal([numHidden, noteRange]))
+    }
+
+    biases = {
+        'out': tf.Variable(tf.random_normal([1, noteRange]))
+    }
