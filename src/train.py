@@ -5,10 +5,14 @@ from tqdm import tqdm
 import preprocess
 
 def menu(songs):
-    lowest_note = preprocess.lowerBound #the index of the lowest note on the piano roll
-    highest_note = preprocess.upperBound #the index of the highest note on the piano roll
-    note_range = highest_note-lowest_note #the note range
+    lowestNote = preprocess.lowerBound #the index of the lowest note on the piano roll
+    highestNote = preprocess.upperBound #the index of the highest note on the piano roll
+    noteRange = highestNote-lowestNote #the note range
 
-    num_timesteps  = 100 #number of timesteps that we will create at a time
-    n_visible      = 2*note_range*num_timesteps 
-    n_hidden       = 64 
+    numTimesteps = 100 #number of timesteps that we will create at a time
+    numVisible = 2*noteRange*numTimesteps 
+    numHidden = 64
+
+    numEpochs = 1000
+    batchSize = 100
+    learningRate = tf.constant(0.0025, tf.float32)  
