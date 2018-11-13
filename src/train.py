@@ -19,9 +19,7 @@ def menu(song):
     trainingSteps = 10000
     displayStep = 200
 
-    weights = {
-        'out': tf.Variable(tf.random_normal([numHidden, noteRange]))
-    }
+    tf.Variable(tf.random_normal([numHidden, noteRange]))
 
     biases = tf.Variable(tf.random_normal([1, noteRange]))
 
