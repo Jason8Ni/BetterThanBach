@@ -29,23 +29,26 @@ def menu(songs):
 
     X = tf.placeholder(tf.float32, [None, noteRange], name = "X")
     
-def sample(probability):
-    #Takes in a vector of probabilities, and returns a random vector of 0s and 1s sampled from the input vector
-    return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
+    biasHidden = tf.Variable(tf.zeros([1, numHidden],  tf.float32, name="biasHidden")) #The bias vector for the hidden layer
+    biasVisible = tf.Variable(tf.zeros([1, numVisible],  tf.float32, name="biasVisible")) #The bias vector for the visible layer
 
-def gibbs_sample(k):
-        #Runs a k-step gibbs chain to sample from the probability distribution of the RBM defined by W, bh, bv
+    def sample(probability):
+        #Takes in a vector of probabilities, and returns a random vector of 0s and 1s sampled from the input vector
+        return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
+
+    def gibbs_sample(k):
+        #Runs a k-step gibbs chain to sample from the probability distribution of the RBM defined by W, biasHidden, biasVisible
         def gibbs_step(count, k, xk):
             #Runs a single gibbs step. The visible values are initialized to xk
-            hk = sample(tf.sigmoid(tf.matmul(xk, W) + bh)) #Propagate the visible values to sample the hidden values
-            xk = sample(tf.sigmoid(tf.matmul(hk, tf.transpose(W)) + bv)) #Propagate the hidden values to sample the visible values
+            hk = sample(tf.sigmoid(tf.matmul(xk, weights) + biasHidden)) #Propagate the visible values to sample the hidden values
+            xk = sample(tf.sigmoid(tf.matmul(hk, tf.transpose(weights)) + biasVisible)) #Propagate the hidden values to sample the visible values
             return count+1, k, xk
 
         #Run gibbs steps for k iterations
         ct = tf.constant(0) #counter
-        [_, _, x_sample] = control_flow_ops.while_loop(lambda count, num_iter, *args: count < num_iter,
-                                            gibbs_step, [ct, tf.constant(k), x])
+        [_, _, xSample] = control_flow_ops.while_loop(lambda count, num_iter, *args: count < num_iter,
+                                            gibbs_step, [ct, tf.constant(k), X])
         #This is not strictly necessary in this implementation, but if you want to adapt this code to use one of TensorFlow's
         #optimizers, you need this in order to stop tensorflow from propagating gradients back through the gibbs step
-        x_sample = tf.stop_gradient(x_sample) 
-        return x_sample
+        xSample = tf.stop_gradient(xSample) 
+        return xSample
