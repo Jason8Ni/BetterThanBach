@@ -23,9 +23,7 @@ def menu(song):
         'out': tf.Variable(tf.random_normal([numHidden, noteRange]))
     }
 
-    biases = {
-        'out': tf.Variable(tf.random_normal([1, noteRange]))
-    }
+    biases = tf.Variable(tf.random_normal([1, noteRange]))
 
     X = tf.placeholder(tf.float32, [None, noteRange], name = "X")
     
@@ -57,19 +55,19 @@ def menu(song):
     ### Training Update Code
     # Now we implement the contrastive divergence algorithm. First, we get the samples of x and h from the probability distribution
     #The sample of x
-    x_sample = gibbs_sample(1) 
+    xSample = gibbs_sample(1) 
     #The sample of the hidden nodes, starting from the visible state of x
-    h = sample(tf.sigmoid(tf.matmul(X, W) + biasHidden)) 
-    #The sample of the hidden nodes, starting from the visible state of x_sample
-    h_sample = sample(tf.sigmoid(tf.matmul(x_sample, W) + biasHidden)) 
+    h = sample(tf.sigmoid(tf.matmul(X, weights) + biasHidden)) 
+    #The sample of the hidden nodes, starting from the visible state of xSample
+    h_sample = sample(tf.sigmoid(tf.matmul(xSample, weights) + biasHidden)) 
 
     #Next, we update the values of W, biasHidden, and biasVisible, based on the difference between the samples that we drew and the original values
     size_bt = tf.cast(tf.shape(X)[0], tf.float32)
-    W_adder  = tf.multiply(learningRate/size_bt, tf.subtract(tf.matmul(tf.transpose(x), h), tf.matmul(tf.transpose(x_sample), h_sample)))
-    biasVisible_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(x, x_sample), 0, True))
+    W_adder  = tf.multiply(learningRate/size_bt, tf.subtract(tf.matmul(tf.transpose(X), h), tf.matmul(tf.transpose(xSample), h_sample)))
+    biasVisible_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(X, xSample), 0, True))
     biasHidden_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(h, h_sample), 0, True))
     #When we do sess.run(updt), TensorFlow will run all 3 update steps
-    updt = [W.assign_add(W_adder), biasVisible.assign_add(biasVisible_adder), biasHidden.assign_add(biasHidden_adder)]
+    updt = [weights.assign_add(W_adder), biasVisible.assign_add(biasVisible_adder), biasHidden.assign_add(biasHidden_adder)]
 
 
     ### Run the graph!
@@ -90,11 +88,11 @@ def menu(song):
             #Train the RBM on batchSize examples at a time
             for i in range(1, len(song), batchSize): 
                 tr_x = song[i:i+batchSize]
-                sess.run(updt, feed_dict={: tr_x})
+                sess.run(updt, feed_dict={X: tr_x})
 
         #Now the model is fully trained, so let's make some music! 
         #Run a gibbs chain where the visible nodes are initialized to 0
-        sample = gibbs_sample(1).eval(session=sess, feed_dict={x: np.zeros((50, numVisible))})
+        sample = gibbs_sample(1).eval(session=sess, feed_dict={X: np.zeros((50, numVisible))})
         for i in range(sample.shape[0]):
             if not any(sample[i,:]):
                 continue
