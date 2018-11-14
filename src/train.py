@@ -5,25 +5,23 @@ from tqdm import tqdm
 import preprocess
 
 def menu(song):
-    lowestNote = preprocess.lowerBound #the index of the lowest note on the piano roll
-    highestNote = preprocess.upperBound #the index of the highest note on the piano roll
-    noteRange = highestNote-lowestNote #the note range
+    lowestNote = preprocess.lowerBound 
+    highestNote = preprocess.upperBound 
+    noteRange = highestNote-lowestNote 
 
-    numTimesteps = 100 #number of timesteps that we will create at a time
-    numVisible = 2*noteRange*numTimesteps 
-    numHidden = 64
+    numTimesteps = 200 # length of the snippet we will be creating at one time
+    numVisible = 2*noteRange*numTimesteps # Number of visible state
+    numHidden = 64 # Number of hidden states
 
+
+    #Hyperparameters... need turning
     numEpochs = 1000
     batchSize = 128
     learningRate = tf.constant(0.0025, tf.float32)
-    trainingSteps = 10000
-    displayStep = 200
 
-    tf.Variable(tf.random_normal([numHidden, noteRange]))
+    weights = tf.Variable(tf.random_normal([numVisible, numHidden]), name="weights")
 
-    biases = tf.Variable(tf.random_normal([1, noteRange]))
-
-    X = tf.placeholder(tf.float32, [None, noteRange], name = "X")
+    X = tf.placeholder(tf.float32, [None, numVisible], name = "X")
     
     biasHidden = tf.Variable(tf.zeros([1, numHidden],  tf.float32, name="biasHidden")) #The bias vector for the hidden layer
     biasVisible = tf.Variable(tf.zeros([1, numVisible],  tf.float32, name="biasVisible")) #The bias vector for the visible layer
