@@ -1,3 +1,5 @@
+#inspired by http://deeplearning.net/tutorial/rnnrbm.html
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
@@ -27,21 +29,21 @@ def menu(song):
     biasVisible = tf.Variable(tf.zeros([1, numVisible],  tf.float32, name="biasVisible")) #The bias vector for the visible layer
 
     def sample(probability):
-        #Takes in a vector of probabilities, and returns a random vector of 0s and 1s sampled from the input vector
-        return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
+        #returns a sample vector
+        return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0,    1))
 
     def gibbs_sample(k):
-        #Runs a k-step gibbs chain to sample from the probability distribution of the RBM defined by W, biasHidden, biasVisible
+        #gibbs chain to sample from the probability distribution of the Boltzmann machine
         def gibbs_step(count, k, xk):
             #Runs a single gibbs step. The visible values are initialized to xk
             hk = sample(tf.sigmoid(tf.matmul(xk, weights) + biasHidden)) #Propagate the visible values to sample the hidden values
             xk = sample(tf.sigmoid(tf.matmul(hk, tf.transpose(weights)) + biasVisible)) #Propagate the hidden values to sample the visible values
             return count+1, k, xk
 
-        #Run gibbs steps for k iterations
-        ct = tf.constant(0) #counter
+        #k iteration
+        counter = tf.constant(0)
         [_, _, xSample] = control_flow_ops.while_loop(lambda count, num_iter, *args: count < num_iter,
-                                            gibbs_step, [ct, tf.constant(k), X])
+                                            gibbs_step, [counter, tf.constant(k), X])
         #This is not strictly necessary in this implementation, but if you want to adapt this code to use one of TensorFlow's
         #optimizers, you need this in order to stop tensorflow from propagating gradients back through the gibbs step
         xSample = tf.stop_gradient(xSample) 
@@ -62,18 +64,18 @@ def menu(song):
     W_adder  = tf.multiply(learningRate/size_bt, tf.subtract(tf.matmul(tf.transpose(X), h), tf.matmul(tf.transpose(xSample), h_sample)))
     biasVisible_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(X, xSample), 0, True))
     biasHidden_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(h, h_sample), 0, True))
-    #When we do sess.run(updt), TensorFlow will run all 3 update steps
-    updt = [weights.assign_add(W_adder), biasVisible.assign_add(biasVisible_adder), biasHidden.assign_add(biasHidden_adder)]
+    #When we do session.run(update), TensorFlow will run all 3 update steps
+    update = [weights.assign_add(W_adder), biasVisible.assign_add(biasVisible_adder), biasHidden.assign_add(biasHidden_adder)]
 
 
     ### Run the graph!
     # Now it's time to start a session and run the graph! 
 
-    with tf.Session() as sess:
+    with tf.Session() as session:
         #First, we train the model
         #initialize the variables of the model
         init = tf.global_variables_initializer()
-        sess.run(init)
+        session.run(init)
         #Run through all of the training data numEpochs times
         for epoch in tqdm(range(numEpochs)):
             #The songs are stored in a time x notes format. The size of each song is timesteps_in_song x 2*noteRange
@@ -84,11 +86,11 @@ def menu(song):
             #Train the RBM on batchSize examples at a time
             for i in range(1, len(song), batchSize): 
                 tr_x = song[i:i+batchSize]
-                sess.run(updt, feed_dict={X: tr_x})
+                session.run(update, feed_dict={X: tr_x})
 
         #Now the model is fully trained, so let's make some music! 
         #Run a gibbs chain where the visible nodes are initialized to 0
-        sample = gibbs_sample(1).eval(session=sess, feed_dict={X: np.zeros((50, numVisible))})
+        sample = gibbs_sample(1).eval(session=session, feed_dict={X: np.zeros((50, numVisible))})
         for i in range(sample.shape[0]):
             if not any(sample[i,:]):
                 continue
