@@ -30,7 +30,7 @@ def menu(song):
 
     def sample(probability):
         #returns a sample vector
-        return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0,    1))
+        return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
 
     def gibbs_sample(k):
         #gibbs chain to sample from the probability distribution of the Boltzmann machine
