@@ -13,7 +13,7 @@ def menu(song):
 
     numTimesteps = 200 # length of the snippet we will be creating at one time
     numVisible = 2*noteRange*numTimesteps # Number of visible state
-    numHidden = 64 # Number of hidden states
+    numHidden = 28*28 # Number of hidden states
 
 
     #Hyperparameters... need turning
@@ -21,23 +21,26 @@ def menu(song):
     batchSize = 128
     learningRate = tf.constant(0.0025, tf.float32)
 
-    weights = tf.Variable(tf.random_normal([numVisible, numHidden]), name="weights")
+    weights = tf.Variable(tf.random_normal([numVisible, numHidden], -0.005, 0.005, name="weights"))
 
     X = tf.placeholder(tf.float32, [None, numVisible], name = "X")
     
-    biasHidden = tf.Variable(tf.zeros([1, numHidden],  tf.float32, name="biasHidden")) #The bias vector for the hidden layer
-    biasVisible = tf.Variable(tf.zeros([1, numVisible],  tf.float32, name="biasVisible")) #The bias vector for the visible layer
+    biasHidden = tf.Variable(tf.zeros([1, numHidden],-0.005, 0.005  tf.float32, name="biasHidden")) #The bias vector for the hidden layer
+    biasVisible = tf.Variable(tf.zeros([1, numVisible], -0.005, 0.005  tf.float32, name="biasVisible")) #The bias vector for the visible layer
 
-    def sample(probability):
+    def sampleInt(probability):
         #returns a sample vector
         return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
+    
+    def sample(probability): 
+        return tf.to_float(tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1)))
 
     def sampleGibbs(k):
         #gibbs chain to sample from the probability distribution of the Boltzmann machine
         def gibbsStep(count, k, xk):
             #Runs a single gibbs step. The visible values are initialized to xk
-            hk = sample(tf.sigmoid(tf.matmul(xk, weights) + biasHidden)) #Propagate the visible values to sample the hidden values
-            xk = sample(tf.sigmoid(tf.matmul(hk, tf.transpose(weights)) + biasVisible)) #Propagate the hidden values to sample the visible values
+            hk = sampleInt(tf.sigmoid(tf.matmul(xk, weights) + biasHidden)) #Propagate the visible values to sample the hidden values
+            xk = sampleInt(tf.sigmoid(tf.matmul(hk, tf.transpose(weights)) + biasVisible)) #Propagate the hidden values to sample the visible values
             return count+1, k, xk
 
         #k iteration
@@ -55,9 +58,9 @@ def menu(song):
     #The sample of x
     xSample = sampleGibbs(1) 
     #The sample of the hidden nodes, starting from the visible state of x
-    h = sample(tf.sigmoid(tf.matmul(X, weights) + biasHidden)) 
+    h = sampleInt(tf.sigmoid(tf.matmul(X, weights) + biasHidden)) 
     #The sample of the hidden nodes, starting from the visible state of xSample
-    hSample = sample(tf.sigmoid(tf.matmul(xSample, weights) + biasHidden)) 
+    hSample = sampleInt(tf.sigmoid(tf.matmul(xSample, weights) + biasHidden)) 
 
     #Next, we update the values of W, biasHidden, and biasVisible, based on the difference between the samples that we drew and the original values
     batch = tf.cast(tf.shape(X)[0], tf.float32)
