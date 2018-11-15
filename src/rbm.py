@@ -57,15 +57,15 @@ def menu(song):
     #The sample of the hidden nodes, starting from the visible state of x
     h = sample(tf.sigmoid(tf.matmul(X, weights) + biasHidden)) 
     #The sample of the hidden nodes, starting from the visible state of xSample
-    h_sample = sample(tf.sigmoid(tf.matmul(xSample, weights) + biasHidden)) 
+    hSample = sample(tf.sigmoid(tf.matmul(xSample, weights) + biasHidden)) 
 
     #Next, we update the values of W, biasHidden, and biasVisible, based on the difference between the samples that we drew and the original values
-    size_bt = tf.cast(tf.shape(X)[0], tf.float32)
-    W_adder  = tf.multiply(learningRate/size_bt, tf.subtract(tf.matmul(tf.transpose(X), h), tf.matmul(tf.transpose(xSample), h_sample)))
-    biasVisible_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(X, xSample), 0, True))
-    biasHidden_adder = tf.multiply(learningRate/size_bt, tf.reduce_sum(tf.subtract(h, h_sample), 0, True))
+    batch = tf.cast(tf.shape(X)[0], tf.float32)
+    wUpdate  = tf.multiply(learningRate/batch, tf.subtract(tf.matmul(tf.transpose(X), h), tf.matmul(tf.transpose(xSample), hSample)))
+    biasVisibleUpdate = tf.multiply(learningRate/batch, tf.reduce_sum(tf.subtract(X, xSample), 0, True))
+    biasHiddenUpdate = tf.multiply(learningRate/batch, tf.reduce_sum(tf.subtract(h, hSample), 0, True))
     #When we do session.run(update), TensorFlow will run all 3 update steps
-    update = [weights.assign_add(W_adder), biasVisible.assign_add(biasVisible_adder), biasHidden.assign_add(biasHidden_adder)]
+    update = [weights.assign_add(wUpdate), biasVisible.assign_add(biasVisibleUpdate), biasHidden.assign_add(biasHiddenUpdate)]
 
 
     ### Run the graph!
