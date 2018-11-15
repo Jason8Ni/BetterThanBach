@@ -32,9 +32,9 @@ def menu(song):
         #returns a sample vector
         return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
 
-    def gibbs_sample(k):
+    def sampleGibbs(k):
         #gibbs chain to sample from the probability distribution of the Boltzmann machine
-        def gibbs_step(count, k, xk):
+        def gibbsStep(count, k, xk):
             #Runs a single gibbs step. The visible values are initialized to xk
             hk = sample(tf.sigmoid(tf.matmul(xk, weights) + biasHidden)) #Propagate the visible values to sample the hidden values
             xk = sample(tf.sigmoid(tf.matmul(hk, tf.transpose(weights)) + biasVisible)) #Propagate the hidden values to sample the visible values
@@ -43,7 +43,7 @@ def menu(song):
         #k iteration
         counter = tf.constant(0)
         [_, _, xSample] = control_flow_ops.while_loop(lambda count, num_iter, *args: count < num_iter,
-                                            gibbs_step, [counter, tf.constant(k), X])
+                                            gibbsStep, [counter, tf.constant(k), X])
         #This is not strictly necessary in this implementation, but if you want to adapt this code to use one of TensorFlow's
         #optimizers, you need this in order to stop tensorflow from propagating gradients back through the gibbs step
         xSample = tf.stop_gradient(xSample) 
@@ -53,7 +53,7 @@ def menu(song):
     ### Training Update Code
     # Now we implement the contrastive divergence algorithm. First, we get the samples of x and h from the probability distribution
     #The sample of x
-    xSample = gibbs_sample(1) 
+    xSample = sampleGibbs(1) 
     #The sample of the hidden nodes, starting from the visible state of x
     h = sample(tf.sigmoid(tf.matmul(X, weights) + biasHidden)) 
     #The sample of the hidden nodes, starting from the visible state of xSample
@@ -78,7 +78,7 @@ def menu(song):
         session.run(init)
         #Run through all of the training data numEpochs times
         for epoch in tqdm(range(numEpochs)):
-            #The songs are stored in a time x notes format. The size of each song is timesteps_in_song x 2*noteRange
+            #The songs are stored in a time x notes format. The size of each song is timesteps in song x 2*noteRange
             #Here we reshape the songs so that each training example is a vector with numTimesteps x 2*noteRange elements
             song = np.array(song)
             song = song[:int(np.floor(song.shape[0]/numTimesteps)*numTimesteps)]
@@ -88,12 +88,11 @@ def menu(song):
                 tr_x = song[i:i+batchSize]
                 session.run(update, feed_dict={X: tr_x})
 
-        #Now the model is fully trained, so let's make some music! 
         #Run a gibbs chain where the visible nodes are initialized to 0
-        sample = gibbs_sample(1).eval(session=session, feed_dict={X: np.zeros((50, numVisible))})
+        sample = sampleGibbs(1).eval(session=session, feed_dict={X: np.zeros((50, numVisible))})
         for i in range(sample.shape[0]):
             if not any(sample[i,:]):
                 continue
             #Here we reshape the vector to be time x notes, and then save the vector as a midi file
             S = np.reshape(sample[i,:], (numTimesteps, 2*noteRange))
-            preprocess.noteStateMatrixToMidi(S, "generated/generated_chord_{}".format(i))
+            preprocess.toFile(S, "generated/generated_chord_{}".format(i))

@@ -6,7 +6,7 @@ upperBound = 127
 span = upperBound-lowerBound
 
 
-def midiToNoteStateMatrix(midifile, squash=True, span=span, verbose = True):
+def midiToMatrix(midifile, squash=True, span=span, verbose = True):
     pattern = midi.read_midifile(midifile)
 
     timeLeft = [track[0].tick for track in pattern]
@@ -71,7 +71,7 @@ def midiToNoteStateMatrix(midifile, squash=True, span=span, verbose = True):
     stateMatrix = np.asarray(stateMatrix).tolist()
     return stateMatrix
 
-def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
+def toFile(stateMatrix, name="example", span=span):
     stateMatrix = np.array(stateMatrix)
     if not len(stateMatrix.shape) == 3:
         stateMatrix = np.dstack((stateMatrix[:, :span], stateMatrix[:, span:]))
@@ -115,7 +115,7 @@ def noteStateMatrixToMidi(stateMatrix, name="example", span=span):
 
     midi.write_midifile(name, pattern)
 
-matrix = midiToNoteStateMatrix('./MusicFiles/Unravel.mid')
-noteStateMatrixToMidi(matrix)
+matrix = midiToMatrix('./MusicFiles/Unravel.mid')
+toFile(matrix)
 
 # Example file, velocity was lost and also tempo seemed to be a bit slower, but the notes and rhthym was great so thats amazing
