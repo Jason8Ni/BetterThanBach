@@ -28,5 +28,5 @@ def main():
 
     X = tf.placeholder(tf.float32, [None, numVisible], name = "X")
 
-    biasHidden = tf.Variable(tf.zeros([1, numHidden],-0.005, 0.005, tf.float32, name="biasHidden")) #The bias vector for the hidden layer
-    biasVisible = tf.Variable(tf.zeros([1, numVisible], -0.005, 0.005, tf.float32, name="biasVisible")) #The bias vector for the visible layer
+    biasHidden = tf.Variable(tf.zeros([1, numHidden], tf.float32, name="biasHidden")) #The bias vector for the hidden layer
+    biasVisible = tf.Variable(tf.zeros([1, numVisible], tf.float32, name="biasVisible")) #The bias vector for the visible layer
