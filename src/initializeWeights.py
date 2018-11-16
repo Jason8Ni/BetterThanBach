@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
-import RBM
 import rbm #The hyperparameters of the RBM and RNN-RBM are specified in the rnn_rbm file
 import preprocess
 
@@ -11,21 +10,23 @@ The purpose of this file is to initialize the weights of the RNN/RBM model.
 
 numEpochs = 1000
 learningRate = tf.constant(0.0025, tf.float32)
-
+numTimesteps = preprocess.numTimesteps
+numVisible = rbm.numVisible
+numHidden = rbm.numHidden
 def main():
-    
-
-numTimesteps = 200 # length of the snippet we will be creating at one time
-numVisible = 2*noteRange*numTimesteps # Number of visible state
-numHidden = 28*28 # Number of hidden states
 
 
-#Hyperparameters... need turning
-batchSize = 128
+     # length of the snippet we will be creating at one time
+    numVisible = 2*noteRange*numTimesteps # Number of visible state
+    numHidden = 28*28 # Number of hidden states
 
-weights = tf.Variable(tf.random_normal([numVisible, numHidden], -0.005, 0.005, name="weights"))
 
-X = tf.placeholder(tf.float32, [None, numVisible], name = "X")
+    #Hyperparameters... need turning
+    batchSize = 128
 
-biasHidden = tf.Variable(tf.zeros([1, numHidden],-0.005, 0.005, tf.float32, name="biasHidden")) #The bias vector for the hidden layer
-biasVisible = tf.Variable(tf.zeros([1, numVisible], -0.005, 0.005, tf.float32, name="biasVisible")) #The bias vector for the visible layer
+    weights = tf.Variable(tf.random_normal([numVisible, numHidden], -0.005, 0.005, name="weights"))
+
+    X = tf.placeholder(tf.float32, [None, numVisible], name = "X")
+
+    biasHidden = tf.Variable(tf.zeros([1, numHidden],-0.005, 0.005, tf.float32, name="biasHidden")) #The bias vector for the hidden layer
+    biasVisible = tf.Variable(tf.zeros([1, numVisible], -0.005, 0.005, tf.float32, name="biasVisible")) #The bias vector for the visible layer
