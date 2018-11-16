@@ -5,15 +5,15 @@ import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 from tqdm import tqdm
 import preprocess
+lowestNote = preprocess.lowerBound 
+highestNote = preprocess.upperBound 
+noteRange = highestNote-lowestNote 
+numTimesteps = 200 # length of the snippet we will be creating at one time
+numVisible = 2*noteRange*numTimesteps # Number of visible state
+numHidden = 28*28 # Number of hidden states
 
 def menu(song):
-    lowestNote = preprocess.lowerBound 
-    highestNote = preprocess.upperBound 
-    noteRange = highestNote-lowestNote 
 
-    numTimesteps = 200 # length of the snippet we will be creating at one time
-    numVisible = 2*noteRange*numTimesteps # Number of visible state
-    numHidden = 28*28 # Number of hidden states
 
 
     #Hyperparameters... need turning
