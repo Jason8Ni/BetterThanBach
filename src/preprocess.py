@@ -4,7 +4,7 @@ import numpy as np
 lowerBound = 0
 upperBound = 127
 span = upperBound-lowerBound
-
+numTimesteps = 100
 
 def midiToMatrix(midifile, squash=True, span=span, verbose = True):
     pattern = midi.read_midifile(midifile)
@@ -115,6 +115,17 @@ def toFile(stateMatrix, name="example", span=span):
 
     midi.write_midifile(name, pattern)
 
+def createSong(path, song):
+    #Reshape the song into a format that midi_manipulation can understand, and then write the song to disk
+    song = np.reshape(song, (song.shape[0]*numTimesteps, 2*span))
+    toFile(song, name=path)
+
+def getSong(path):
+    #Load the song and reshape it to place multiple timesteps next to each other
+    song = np.array(midiToMatrix(path))
+    song = song[:np.floor(song.shape[0]/numTimesteps)*numTimesteps]
+    song = np.reshape(song, [song.shape[0]/numTimesteps, song.shape[1]*numTimesteps])
+    return song
 matrix = midiToMatrix('./MusicFiles/Unravel.mid')
 toFile(matrix)
 
