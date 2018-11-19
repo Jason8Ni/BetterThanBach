@@ -14,8 +14,6 @@ numHidden = 28*28 # Number of hidden states
 
 def menu(song):
 
-
-
     #Hyperparameters... need turning
     numEpochs = 1000
     batchSize = 128
@@ -27,7 +25,7 @@ def menu(song):
     
     biasHidden = tf.Variable(tf.zeros([1, numHidden], tf.float32, name="biasHidden")) #The bias vector for the hidden layer
     biasVisible = tf.Variable(tf.zeros([1, numVisible], tf.float32, name="biasVisible")) #The bias vector for the visible layer
-
+ 
     def sampleInt(probability):
         #returns a sample vector
         return tf.floor(probability + tf.random_uniform(tf.shape(probability), 0, 1))
@@ -47,8 +45,7 @@ def menu(song):
         counter = tf.constant(0)
         [_, _, xSample] = control_flow_ops.while_loop(lambda count, num_iter, *args: count < num_iter,
                                             gibbsStep, [counter, tf.constant(k), X])
-        #This is not strictly necessary in this implementation, but if you want to adapt this code to use one of TensorFlow's
-        #optimizers, you need this in order to stop tensorflow from propagating gradients back through the gibbs step
+        #This is not strictly necessary in this implementation, but if you want to adapt this code to use one a optimization function
         xSample = tf.stop_gradient(xSample) 
         return xSample
 
