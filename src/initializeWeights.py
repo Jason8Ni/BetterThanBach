@@ -13,8 +13,9 @@ learningRate = tf.constant(0.0025, tf.float32)
 numTimesteps = preprocess.numTimesteps
 numVisible = rbm.numVisible
 numHidden = rbm.numHidden
-def main():
 
+
+def main():
      # length of the snippet we will be creating at one time
     numVisible = 2*noteRange*numTimesteps # Number of visible state
     numHidden = 28*28 # Number of hidden states
