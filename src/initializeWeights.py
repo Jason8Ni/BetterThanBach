@@ -17,10 +17,10 @@ numHidden = rbm.numHidden
 
 def main():
      # length of the snippet we will be creating at one time
-    numVisible = 2*noteRange*numTimesteps # Number of visible state
-    numHidden = 28*28 # Number of hidden states
+    numVisible = rbm.numVisible # Number of visible state
+    numHidden = rbm.numHidden # Number of hidden states
 
-
+ 
     #Hyperparameters... need turning
     batchSize = 128
 
@@ -30,3 +30,5 @@ def main():
 
     biasHidden = tf.Variable(tf.zeros([1, numHidden], tf.float32, name="biasHidden")) #The bias vector for the hidden layer
     biasVisible = tf.Variable(tf.zeros([1, numVisible], tf.float32, name="biasVisible")) #The bias vector for the visible layer
+
+    songMatrix = preprocess.midiToMatrix('./MusicFiles/Unravel.mid')
